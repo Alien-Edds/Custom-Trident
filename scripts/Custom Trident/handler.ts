@@ -70,23 +70,24 @@ world.afterEvents.projectileHitEntity.subscribe((data) => {
 
 system.runInterval(() => {
     for (const player of world.getAllPlayers()) {
+        if (!player || !player.isValid()) continue
         const {x, y, z} = player.location
         const tridents = player.dimension.getEntities({ location: {x: x, y: y + 1, z: z}, maxDistance: 2 })
         const inv = player.getComponent(EntityInventoryComponent.componentId) as EntityInventoryComponent
-        if (!inv.container || inv.container.emptySlotsCount == 0) return
+        if (!inv.container || inv.container.emptySlotsCount == 0) continue
         const container = inv.container
         for (let i = 0; i < tridents.length; i++) {
             if (!tridents[i] || !tridents[i].isValid()) continue
-            if (container.emptySlotsCount <= 0) return
+            if (container.emptySlotsCount <= 0) continue
             const found = CustomTridents.find((f) => f.projectile?.entityID == tridents[i].typeId)
             if (!found) continue
             const tridentEntity = tridents[i]
-            if (!TridentManager.canPickUp(tridentEntity)) return
+            if (!TridentManager.canPickUp(tridentEntity)) continue
             const ownerID = tridentEntity.getDynamicProperty("ownerID") as string | undefined
-            if (!ownerID) return
-            if (ownerID != player.id) return
+            if (!ownerID) continue
+            if (ownerID != player.id) continue
             const itemData = tridentEntity.getDynamicProperty("item") as string | undefined
-            if (!itemData) return
+            if (!itemData) continue
             const gameMode = player.getGameMode()
             if (gameMode != GameMode.creative && gameMode != GameMode.spectator) {
                 const item = TridentManager.getItem(JSON.parse(itemData) as TridentItem)
