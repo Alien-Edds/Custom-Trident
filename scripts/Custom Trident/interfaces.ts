@@ -1,3 +1,5 @@
+import { Dimension, Entity, Player } from "@minecraft/server"
+
 export enum RiptideEnvironment{
     Any = "any",
     Water = "water",
@@ -8,9 +10,13 @@ export interface Riptide{
     environment: RiptideEnvironment
     velocity: number,
     sound?: {
+        /**
+         * @param ids In order from level 1 to 3
+         */
         ids: [string, string, string],
         volume: number
-    }
+    },
+    onRiptide?: (player: Player, riptideLevel: number) => void
 }
 
 export interface TridentProjectile{
@@ -19,6 +25,7 @@ export interface TridentProjectile{
      */
     entityID: string,
     thrownVelocity: number,
+    onReturn?: (trident: Entity, dimension: Dimension, owner: Entity, loyaltyLevel: number) => void,
     returnSpeed: number,
     returnSound?: {
         id: string,

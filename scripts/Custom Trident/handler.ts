@@ -24,6 +24,7 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
             if (riptide.sound) {
                 source.dimension.playSound(riptide.sound.ids[level - 1], source.location)
             }
+            if (riptide.onRiptide) riptide.onRiptide(source, level)
             return
         }
         return
@@ -72,7 +73,7 @@ system.runInterval(() => {
     for (const player of world.getAllPlayers()) {
         if (!player || !player.isValid()) continue
         const {x, y, z} = player.location
-        const tridents = player.dimension.getEntities({ location: {x: x, y: y + 1, z: z}, maxDistance: 2 })
+        const tridents = player.dimension.getEntities({ location: {x: x, y: y + 1, z: z}, maxDistance: 2, excludeTypes: ["minecraft:player", "minecraft:item", "minecraft:zombie", "minecraft:skeleton", "minecraft:chicken"] })
         const inv = player.getComponent(EntityInventoryComponent.componentId) as EntityInventoryComponent
         if (!inv.container || inv.container.emptySlotsCount == 0) continue
         const container = inv.container
@@ -97,7 +98,7 @@ system.runInterval(() => {
             tridentEntity.remove()
         }
     }
-}, 10)
+}, 15)
 
 system.afterEvents.scriptEventReceive.subscribe((data) => {
     if (data.id != "custom_trident:trident_return" && data.id != "custom_trident:trident_tick") return
@@ -118,6 +119,7 @@ system.afterEvents.scriptEventReceive.subscribe((data) => {
         const owner = TridentManager.getOwner(ownerID)
         if (!owner) return
         tridentEntity.setDynamicProperty("returning", true)
+        if (tridentData.projectile?.onReturn) tridentData.projectile.onReturn(tridentEntity, tridentEntity.dimension, owner, loyalty.lvl)
         if (tridentData.projectile?.returnSound) {
             const sound = tridentData.projectile.returnSound
             if (owner.typeId == "minecraft:player") (owner as Player).playSound(sound.id, { volume: sound.volume, pitch: sound.pitch })
@@ -134,7 +136,7 @@ system.afterEvents.scriptEventReceive.subscribe((data) => {
             tridentEntity.teleport({ x: loc.x + viewDir.x, y: loc.y + viewDir.y, z: loc.z + (viewDir.z * (velocity ? velocity : 1)) }, { facingLocation: { x: ownerLoc.x, y: ownerLoc.y + 1, z: ownerLoc.z } })
             system.runTimeout(() => {
                 tick()
-            }, 2)
+            }, 3)
         }
         tick()
     } else if (tridentEntity.location.y < -64) {

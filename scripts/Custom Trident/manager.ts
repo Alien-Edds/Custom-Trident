@@ -15,6 +15,7 @@ export class TridentManager{
         if (enchants[0]) tridentItem.enchantments = enchants
         return tridentItem
     }
+
     static getItem(tridentItem: TridentItem): ItemStack {
         const item = new ItemStack(tridentItem.itemID)
         const durComp = item.getComponent(ItemDurabilityComponent.componentId) as ItemDurabilityComponent
@@ -24,6 +25,7 @@ export class TridentManager{
         if (tridentItem.enchantments) for (const enchant of tridentItem.enchantments) enchantComp.addEnchantment({type: new EnchantmentType(enchant.id), level: enchant.lvl})
         return item
     }
+
     static isInEnvironment(environment: RiptideEnvironment, player: Player): boolean {
         switch (environment) {
             case RiptideEnvironment.Any :
@@ -38,6 +40,7 @@ export class TridentManager{
         }
         return false
     }
+
     static canPickUp(entity: Entity): boolean {
         if (entity.getDynamicProperty("returning")) {
             return true
@@ -45,9 +48,11 @@ export class TridentManager{
             return true
         } else return false
     }
+
     static getOwner(ownerID: string): Entity | undefined {
         return world.getEntity(ownerID)
     }
+    
     static reduceDurability(tridentItem: TridentItem): boolean {
         const unbreaking = tridentItem.enchantments?.find((f) => f.id == "unbreaking")
         if (!unbreaking) return true
