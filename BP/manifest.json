@@ -1,0 +1,46 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "Custom Trident Template",
+        "description": "A template for a custom trident.",
+        "min_engine_version": [
+            1,
+            21,
+            30
+        ],
+        "uuid": "3f318769-00f1-4547-af8a-310cc804e6f4",
+        "version":[
+            1,
+            0,
+            0
+        ]
+    },
+    "modules": [
+        {
+            "type": "data",
+            "uuid": "6a90b315-e94d-4ebc-9df7-8d1d2508a899",
+            "version":[
+                1,
+                0,
+                0
+            ]
+        },
+        {
+            "type": "script",
+            "language": "javascript",
+            "entry": "scripts/main.js",
+            "uuid": "d6cd3239-80e7-4736-a6f7-300e9b82a33e",
+            "version":[
+                1,
+                0,
+                0
+            ]
+        }
+    ],
+    "dependencies": [
+        {
+            "module_name": "@minecraft/server",
+            "version": "1.14.0"
+        }
+    ]
+}

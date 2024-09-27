@@ -1,0 +1,19 @@
+{
+    "format_version": "1.10.0",
+    "render_controllers": {
+        "controller.render.custom_trident.my_thrown_trident": {
+            "geometry": "Geometry.default",
+            "textures": [
+                "Texture.default"
+            ],
+            "materials": [
+                {
+                    "*": "Material.default"
+                }
+            ],
+            "is_hurt_color": {},
+            "on_fire_color": {},
+            "filter_lighting": true
+        }
+    }
+}

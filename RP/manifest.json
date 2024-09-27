@@ -1,0 +1,29 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "Custom Trident Template",
+        "description": "A template for a custom trident.",
+        "min_engine_version": [
+            1,
+            21,
+            20
+        ],
+        "uuid": "4f61e782-c29b-421e-ae6a-90aa6a980bbe",
+        "version":[
+            1,
+            0,
+            0
+        ]
+    },
+    "modules": [
+        {
+            "type": "resources",
+            "uuid": "bc744973-aff1-467c-a036-160ea0bdf60c",
+            "version":[
+                1,
+                0,
+                0
+            ]
+        }
+    ]
+}

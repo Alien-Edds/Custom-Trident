@@ -1,0 +1,28 @@
+{
+    "format_version": "1.12.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "custom_trident:my_thrown_trident",
+            "geometry": {
+                "default": "geometry.thrown_trident"
+            },
+            "textures": {
+                "default": "textures/custom_trident/entity/my_thrown_trident"
+            },
+            "materials": {
+                "default": "trident"
+            },
+            "render_controllers": [
+                "controller.render.custom_trident.my_thrown_trident"
+            ],
+            "animations": {
+                "rotate": "animation.custom_trident.my_trident.rotate"
+            },
+            "scripts": {
+                "animate": [
+                    "rotate"
+                ]
+            }
+        }
+    }
+}
