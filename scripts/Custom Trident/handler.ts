@@ -1,5 +1,5 @@
 import { EntityEquippableComponent, EntityInventoryComponent, EntityProjectileComponent, EquipmentSlot, GameMode, ItemDurabilityComponent, ItemEnchantableComponent, Player, system, world } from "@minecraft/server";
-import { CustomTridents } from "./data";
+import { CustomTridents, waitTicks } from "./data";
 import { TridentManager } from "./manager";
 import { TridentItem } from "./interfaces";
 
@@ -39,6 +39,7 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
     if (source.getGameMode() != GameMode.creative) mainhand.setItem()
     projectile.setDynamicProperty("ownerID", source.id)
     const projectileComp = projectile.getComponent(EntityProjectileComponent.componentId) as EntityProjectileComponent
+    if (enchComp?.getEnchantments()[0]) projectile.setProperty('custom_trident:enchanted', true)
     if (!projectileComp) return
     projectileComp.owner = source
     const viewDir = source.getViewDirection()
@@ -51,14 +52,24 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
 
 world.afterEvents.projectileHitBlock.subscribe((data) => {
     const { projectile } = data
+    system.runTimeout(() => {
+
+    
     if (!projectile || !projectile.isValid()) return
-    projectile.runCommand("scriptevent custom_trident:trident_return")
+    let itemData = projectile.getDynamicProperty("item") as string | undefined | TridentItem
+    if (!itemData) return
+    itemData = JSON.parse(itemData as string) as TridentItem
+    if (!itemData.enchantments) return
+    const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty")
+    if (!loyalty) return
+    projectile.triggerEvent("custom_trident:returning")
+    }, waitTicks)
 })
 
 world.afterEvents.projectileHitEntity.subscribe((data) => {
     const { projectile } = data
+    system.runTimeout(() => {
     if (!projectile || !projectile.isValid()) return
-    projectile.runCommand("scriptevent custom_trident:trident_return")
     let itemData = projectile.getDynamicProperty("item") as string | undefined | TridentItem
     if (!itemData) return
     itemData = JSON.parse(itemData as string) as TridentItem
@@ -66,14 +77,19 @@ world.afterEvents.projectileHitEntity.subscribe((data) => {
     if (!TridentManager.reduceDurability(itemData)) return
     itemData.durabilityDamage += 1
     projectile.setDynamicProperty("item", JSON.stringify(itemData))
+    if (!itemData.enchantments) return
+    const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty")
+    if (!loyalty) return
+    projectile.triggerEvent("custom_trident:returning")
+    }, waitTicks)
 
 })
 
 system.runInterval(() => {
     for (const player of world.getAllPlayers()) {
         if (!player || !player.isValid()) continue
-        const {x, y, z} = player.location
-        const tridents = player.dimension.getEntities({ location: {x: x, y: y + 1, z: z}, maxDistance: 2, excludeTypes: ["minecraft:player", "minecraft:item", "minecraft:zombie", "minecraft:skeleton", "minecraft:chicken"] })
+        const { x, y, z } = player.location
+        const tridents = player.dimension.getEntities({ location: { x: x, y: y + 1, z: z }, maxDistance: 2, excludeTypes: ["minecraft:player", "minecraft:item", "minecraft:zombie", "minecraft:skeleton", "minecraft:chicken"] })
         const inv = player.getComponent(EntityInventoryComponent.componentId) as EntityInventoryComponent
         if (!inv.container || inv.container.emptySlotsCount == 0) continue
         const container = inv.container
@@ -107,40 +123,41 @@ system.afterEvents.scriptEventReceive.subscribe((data) => {
     const tridentData = CustomTridents.find((f) => f.projectile?.entityID == tridentEntity.typeId)
     if (!tridentData) return
     if (data.id == "custom_trident:trident_return") {
-        if (tridentEntity.getDynamicProperty("returning")) return
-        const comp = tridentEntity.getComponent(EntityProjectileComponent.componentId) as EntityProjectileComponent | undefined
+
         let itemData = tridentEntity.getDynamicProperty("item") as string | undefined | TridentItem
         if (!itemData) return
         itemData = JSON.parse(itemData as string) as TridentItem
-        const loyalty = itemData.enchantments?.find((f) => f.id == "loyalty")
+        if (!itemData.enchantments) return
+        const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty")
         if (!loyalty) return
         const ownerID = tridentEntity.getDynamicProperty("ownerID") as string | undefined
         if (!ownerID) return
         const owner = TridentManager.getOwner(ownerID)
         if (!owner) return
-        tridentEntity.setDynamicProperty("returning", true)
-        if (tridentData.projectile?.onReturn) tridentData.projectile.onReturn(tridentEntity, tridentEntity.dimension, owner, loyalty.lvl)
-        if (tridentData.projectile?.returnSound) {
-            const sound = tridentData.projectile.returnSound
-            if (owner.typeId == "minecraft:player") (owner as Player).playSound(sound.id, { volume: sound.volume, pitch: sound.pitch })
+        if (!tridentEntity || !tridentEntity.isValid() || !owner || !owner.isValid()) return
+        const loc = tridentEntity.location
+        let velocity = tridentData.projectile?.returnSpeed
+        if (velocity === undefined) velocity = 1
+        if (!loyalty) return
+        velocity *= 1 + (loyalty.lvl * 0.25)
+        const ownerLoc = owner.location
+        tridentEntity.teleport(loc, { facingLocation: { x: ownerLoc.x, y: ownerLoc.y + 1, z: ownerLoc.z } })
+        const viewDir = tridentEntity.getViewDirection()
+        tridentEntity.teleport({ x: loc.x + viewDir.x + (viewDir.x * velocity), y: loc.y + viewDir.y + (viewDir.y * velocity), z: loc.z + (viewDir.z * velocity) })
+        {
+            if (tridentEntity.getDynamicProperty("returning")) return
+
+            tridentEntity.setDynamicProperty("returning", true)
+            if (tridentData.projectile?.onReturn) tridentData.projectile.onReturn(tridentEntity, tridentEntity.dimension, owner, loyalty.lvl)
+            if (tridentData.projectile?.returnSound) {
+                const sound = tridentData.projectile.returnSound
+                if (owner.typeId == "minecraft:player") (owner as Player).playSound(sound.id, { volume: sound.volume, pitch: sound.pitch })
+            }
         }
-        function tick() {
-            if (!tridentEntity || !tridentEntity.isValid() || !owner || !owner.isValid()) return
-            const viewDir = tridentEntity.getViewDirection()
-            const loc = tridentEntity.location
-            let velocity = tridentData?.projectile?.returnSpeed
-            if (velocity === undefined) velocity = 1
-            if (!loyalty) return
-            velocity *= 1 + (loyalty.lvl * 0.25)
-            const ownerLoc = owner.location
-            tridentEntity.teleport({ x: loc.x + viewDir.x, y: loc.y + viewDir.y, z: loc.z + (viewDir.z * (velocity ? velocity : 1)) }, { facingLocation: { x: ownerLoc.x, y: ownerLoc.y + 1, z: ownerLoc.z } })
-            system.runTimeout(() => {
-                tick()
-            }, 3)
-        }
-        tick()
+
     } else if (tridentEntity.location.y < -64) {
         tridentEntity.runCommand("scriptevent custom_trident:trident_return")
     }
+    return
 
 })

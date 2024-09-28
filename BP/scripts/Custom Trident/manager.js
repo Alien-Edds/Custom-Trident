@@ -13,7 +13,7 @@ export class TridentManager {
         const enchants = [];
         if (enchComp)
             for (const enchant of enchComp.getEnchantments())
-                enchants.push({ id: enchant.type.id, lvl: enchant.level });
+                enchants.push({ id: `enchant.${enchant.type.id}`, lvl: enchant.level });
         if (enchants[0])
             tridentItem.enchantments = enchants;
         return tridentItem;
@@ -27,7 +27,7 @@ export class TridentManager {
         item.nameTag = tridentItem.nameTag;
         if (tridentItem.enchantments)
             for (const enchant of tridentItem.enchantments)
-                enchantComp.addEnchantment({ type: new EnchantmentType(enchant.id), level: enchant.lvl });
+                enchantComp.addEnchantment({ type: new EnchantmentType(enchant.id.split(".")[1]), level: enchant.lvl });
         return item;
     }
     static isInEnvironment(environment, player) {

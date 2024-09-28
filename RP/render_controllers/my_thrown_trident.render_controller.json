@@ -3,13 +3,13 @@
     "render_controllers": {
         "controller.render.custom_trident.my_thrown_trident": {
             "geometry": "Geometry.default",
-            "textures": [
-                "Texture.default"
-            ],
             "materials": [
                 {
-                    "*": "Material.default"
+                    "*": "material.default"
                 }
+            ],
+            "textures": [
+                "texture.default"
             ],
             "is_hurt_color": {},
             "on_fire_color": {},

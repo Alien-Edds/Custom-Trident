@@ -6,7 +6,26 @@
             "is_spawnable": false,
             "is_summonable": true,
             "is_experimental": false,
-            "runtime_identifier": "snowball"
+            "runtime_identifier": "snowball",
+            "properties": {
+                "custom_trident:enchanted": {
+                    "client_sync": true,
+                    "default": false,
+                    "type": "bool"
+                }
+            }
+        },
+        "component_groups": {
+            "custom_trident:returning": {
+                "minecraft:timer": {
+                    "time": 0.15,
+                    "looping": true,
+                    "time_down_event": {
+                        "event": "custom_trident:trident_return",
+                        "target": "self"
+                    }
+                }
+            }
         },
         "components": {
             "minecraft:damage_sensor": {
@@ -39,10 +58,6 @@
                     },
                     "stick_in_ground": {
                         "shake_time": 0
-                    },
-                    "definition_event": {
-                        "event_trigger": "custom_trident:trident_return",
-                        "affect_projectile": true
                     }
                 },
                 "liquid_inertia": 0.99,
@@ -66,16 +81,16 @@
             "minecraft:pushable": {
                 "is_pushable": true,
                 "is_pushable_by_piston": true
-            },
-            "minecraft:conditional_bandwidth_optimization": {
-                "default_values": {
-                    "max_optimized_distance": 80.0,
-                    "max_dropped_ticks": 7,
-                    "use_motion_prediction_hints": true
-                }
             }
         },
         "events": {
+            "custom_trident:returning": {
+                "add": {
+                    "component_groups": [
+                        "custom_trident:returning"
+                    ]
+                }
+            },
             "custom_trident:trident_return": {
                 "queue_command": {
                     "command": "scriptevent custom_trident:trident_return"

@@ -4,7 +4,7 @@
         "description": {
             "identifier": "custom_trident:my_thrown_trident",
             "geometry": {
-                "default": "geometry.thrown_trident"
+                "default": "geometry.custom_trident.my_thrown_trident"
             },
             "textures": {
                 "default": "textures/custom_trident/entity/my_thrown_trident"

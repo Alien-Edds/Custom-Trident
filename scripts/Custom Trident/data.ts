@@ -1,6 +1,8 @@
 import { world } from "@minecraft/server";
 import { RiptideEnvironment, Trident } from "./interfaces";
 
+export const waitTicks = 3
+
 export const CustomTridents: Trident[] = [
     {
         itemID: "custom_trident:my_trident",

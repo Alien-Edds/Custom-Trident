@@ -1,5 +1,5 @@
 import { EntityEquippableComponent, EntityInventoryComponent, EntityProjectileComponent, EquipmentSlot, GameMode, ItemDurabilityComponent, ItemEnchantableComponent, system, world } from "@minecraft/server";
-import { CustomTridents } from "./data";
+import { CustomTridents, waitTicks } from "./data";
 import { TridentManager } from "./manager";
 world.afterEvents.itemReleaseUse.subscribe((data) => {
     const { source, useDuration } = data;
@@ -46,6 +46,8 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
         mainhand.setItem();
     projectile.setDynamicProperty("ownerID", source.id);
     const projectileComp = projectile.getComponent(EntityProjectileComponent.componentId);
+    if (enchComp?.getEnchantments()[0])
+        projectile.setProperty('custom_trident:enchanted', true);
     if (!projectileComp)
         return;
     projectileComp.owner = source;
@@ -58,25 +60,43 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
 });
 world.afterEvents.projectileHitBlock.subscribe((data) => {
     const { projectile } = data;
-    if (!projectile || !projectile.isValid())
-        return;
-    projectile.runCommand("scriptevent custom_trident:trident_return");
+    system.runTimeout(() => {
+        if (!projectile || !projectile.isValid())
+            return;
+        let itemData = projectile.getDynamicProperty("item");
+        if (!itemData)
+            return;
+        itemData = JSON.parse(itemData);
+        if (!itemData.enchantments)
+            return;
+        const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty");
+        if (!loyalty)
+            return;
+        projectile.triggerEvent("custom_trident:returning");
+    }, waitTicks);
 });
 world.afterEvents.projectileHitEntity.subscribe((data) => {
     const { projectile } = data;
-    if (!projectile || !projectile.isValid())
-        return;
-    projectile.runCommand("scriptevent custom_trident:trident_return");
-    let itemData = projectile.getDynamicProperty("item");
-    if (!itemData)
-        return;
-    itemData = JSON.parse(itemData);
-    if (itemData.durabilityDamage === undefined)
-        return;
-    if (!TridentManager.reduceDurability(itemData))
-        return;
-    itemData.durabilityDamage += 1;
-    projectile.setDynamicProperty("item", JSON.stringify(itemData));
+    system.runTimeout(() => {
+        if (!projectile || !projectile.isValid())
+            return;
+        let itemData = projectile.getDynamicProperty("item");
+        if (!itemData)
+            return;
+        itemData = JSON.parse(itemData);
+        if (itemData.durabilityDamage === undefined)
+            return;
+        if (!TridentManager.reduceDurability(itemData))
+            return;
+        itemData.durabilityDamage += 1;
+        projectile.setDynamicProperty("item", JSON.stringify(itemData));
+        if (!itemData.enchantments)
+            return;
+        const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty");
+        if (!loyalty)
+            return;
+        projectile.triggerEvent("custom_trident:returning");
+    }, waitTicks);
 });
 system.runInterval(() => {
     for (const player of world.getAllPlayers()) {
@@ -127,14 +147,13 @@ system.afterEvents.scriptEventReceive.subscribe((data) => {
     if (!tridentData)
         return;
     if (data.id == "custom_trident:trident_return") {
-        if (tridentEntity.getDynamicProperty("returning"))
-            return;
-        const comp = tridentEntity.getComponent(EntityProjectileComponent.componentId);
         let itemData = tridentEntity.getDynamicProperty("item");
         if (!itemData)
             return;
         itemData = JSON.parse(itemData);
-        const loyalty = itemData.enchantments?.find((f) => f.id == "loyalty");
+        if (!itemData.enchantments)
+            return;
+        const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty");
         if (!loyalty)
             return;
         const ownerID = tridentEntity.getDynamicProperty("ownerID");
@@ -143,34 +162,34 @@ system.afterEvents.scriptEventReceive.subscribe((data) => {
         const owner = TridentManager.getOwner(ownerID);
         if (!owner)
             return;
-        tridentEntity.setDynamicProperty("returning", true);
-        if (tridentData.projectile?.onReturn)
-            tridentData.projectile.onReturn(tridentEntity, tridentEntity.dimension, owner, loyalty.lvl);
-        if (tridentData.projectile?.returnSound) {
-            const sound = tridentData.projectile.returnSound;
-            if (owner.typeId == "minecraft:player")
-                owner.playSound(sound.id, { volume: sound.volume, pitch: sound.pitch });
-        }
-        function tick() {
-            if (!tridentEntity || !tridentEntity.isValid() || !owner || !owner.isValid())
+        if (!tridentEntity || !tridentEntity.isValid() || !owner || !owner.isValid())
+            return;
+        const loc = tridentEntity.location;
+        let velocity = tridentData.projectile?.returnSpeed;
+        if (velocity === undefined)
+            velocity = 1;
+        if (!loyalty)
+            return;
+        velocity *= 1 + (loyalty.lvl * 0.25);
+        const ownerLoc = owner.location;
+        tridentEntity.teleport(loc, { facingLocation: { x: ownerLoc.x, y: ownerLoc.y + 1, z: ownerLoc.z } });
+        const viewDir = tridentEntity.getViewDirection();
+        tridentEntity.teleport({ x: loc.x + viewDir.x + (viewDir.x * velocity), y: loc.y + viewDir.y + (viewDir.y * velocity), z: loc.z + (viewDir.z * velocity) });
+        {
+            if (tridentEntity.getDynamicProperty("returning"))
                 return;
-            const viewDir = tridentEntity.getViewDirection();
-            const loc = tridentEntity.location;
-            let velocity = tridentData?.projectile?.returnSpeed;
-            if (velocity === undefined)
-                velocity = 1;
-            if (!loyalty)
-                return;
-            velocity *= 1 + (loyalty.lvl * 0.25);
-            const ownerLoc = owner.location;
-            tridentEntity.teleport({ x: loc.x + viewDir.x, y: loc.y + viewDir.y, z: loc.z + (viewDir.z * (velocity ? velocity : 1)) }, { facingLocation: { x: ownerLoc.x, y: ownerLoc.y + 1, z: ownerLoc.z } });
-            system.runTimeout(() => {
-                tick();
-            }, 3);
+            tridentEntity.setDynamicProperty("returning", true);
+            if (tridentData.projectile?.onReturn)
+                tridentData.projectile.onReturn(tridentEntity, tridentEntity.dimension, owner, loyalty.lvl);
+            if (tridentData.projectile?.returnSound) {
+                const sound = tridentData.projectile.returnSound;
+                if (owner.typeId == "minecraft:player")
+                    owner.playSound(sound.id, { volume: sound.volume, pitch: sound.pitch });
+            }
         }
-        tick();
     }
     else if (tridentEntity.location.y < -64) {
         tridentEntity.runCommand("scriptevent custom_trident:trident_return");
     }
+    return;
 });
