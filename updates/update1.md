@@ -7,4 +7,4 @@
 
 ### Known issues
 - Riptide animation doesn't play in third person.
-- First person animation if you have riptide or not.
+- First person animation plays no matter if you have riptide or not.
