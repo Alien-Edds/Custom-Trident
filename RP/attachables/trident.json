@@ -16,6 +16,7 @@
       },
       "animations": {
         "wield": "controller.animation.custom_trident.my_trident.wield",
+        "controller_wield_first_person": "controller.animation.custom_trident.my_trident.first_person_wield",
         "wield_first_person": "animation.custom_trident.my_trident.wield_first_person",
         "wield_first_person_raise": "animation.custom_trident.my_trident.wield_first_person_raise",
         "wield_first_person_raise_shake": "animation.custom_trident.my_trident.wield_first_person_raise_shake",

@@ -1,7 +1,10 @@
-import { EntityEquippableComponent, EntityInventoryComponent, EntityProjectileComponent, EquipmentSlot, GameMode, ItemDurabilityComponent, ItemEnchantableComponent, Player, system, world } from "@minecraft/server";
+import { Block, EntityEquippableComponent, EntityInventoryComponent, EntityProjectileComponent, EquipmentSlot, GameMode, ItemDurabilityComponent, ItemEnchantableComponent, MinecraftDimensionTypes, Player, system, world } from "@minecraft/server";
 import { CustomTridents, waitTicks } from "./data";
 import { TridentManager } from "./manager";
 import { TridentItem } from "./interfaces";
+import { Weather } from "./weather";
+
+Weather.initialize();
 
 world.afterEvents.itemReleaseUse.subscribe((data) => {
     const { source, useDuration } = data
@@ -12,21 +15,10 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
     if (item?.typeId != data.itemStack.typeId) return
     const tridentData = CustomTridents.find((f) => f.itemID == item.typeId)
     if (!tridentData) return
-    if (-useDuration + 19999980 < 13) return
+    if (-useDuration + 19999980 < 10) return
     const enchComp = item.getComponent(ItemEnchantableComponent.componentId) as ItemEnchantableComponent | undefined
-    if (tridentData.riptide && enchComp?.hasEnchantment("riptide")) {
-        const level = enchComp.getEnchantment("riptide")?.level
-        if (level === undefined) return
-        const riptide = tridentData.riptide
-        if (TridentManager.isInEnvironment(riptide.environment, source)) {
-            const viewDir = source.getViewDirection()
-            source.applyKnockback(viewDir.x, viewDir.z, (((Math.abs(viewDir.x) + Math.abs(viewDir.z)) * 1.5) * (riptide.velocity + ((riptide.velocity / 6) * level))), viewDir.y * (riptide.velocity + ((riptide.velocity / 6) * level)))
-            if (riptide.sound) {
-                source.dimension.playSound(riptide.sound.ids[level - 1], source.location)
-            }
-            if (riptide.onRiptide) riptide.onRiptide(source, level)
-            return
-        }
+    if (tridentData.riptide && (tridentData.riptide.needsEnchant === false || enchComp?.hasEnchantment("riptide"))) {
+        TridentManager.riptide(tridentData, enchComp, source)
         return
     }
     const durComp = item.getComponent(ItemDurabilityComponent.componentId) as ItemDurabilityComponent | undefined
@@ -52,36 +44,49 @@ world.afterEvents.itemReleaseUse.subscribe((data) => {
 
 world.afterEvents.projectileHitBlock.subscribe((data) => {
     const { projectile } = data
-    system.runTimeout(() => {
 
-    
-    if (!projectile || !projectile.isValid()) return
-    let itemData = projectile.getDynamicProperty("item") as string | undefined | TridentItem
-    if (!itemData) return
-    itemData = JSON.parse(itemData as string) as TridentItem
-    if (!itemData.enchantments) return
-    const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty")
-    if (!loyalty) return
-    projectile.triggerEvent("custom_trident:returning")
-    }, waitTicks)
+
+        if (!projectile || !projectile.isValid()) return
+        let itemData = projectile.getDynamicProperty("item") as string | undefined | TridentItem
+        if (!itemData) return
+        itemData = JSON.parse(itemData as string) as TridentItem
+        if (!itemData.enchantments) return
+        const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty")
+        const channeling = itemData.enchantments.find((f) => f.id == "enchant.channeling" )
+        if (loyalty) system.runTimeout(() => {if (projectile && projectile.isValid()) projectile.triggerEvent("custom_trident:returning")})
+        const block = data.getBlockHit().block
+        if (channeling && block.typeId === "minecraft:lightning_rod" && data.dimension.id == MinecraftDimensionTypes.overworld && Weather.currentWeather == "Thunder" && block) {
+            const center = block.center()
+            let topMostBlock: Block | undefined = undefined
+            try {topMostBlock = data.dimension.getTopmostBlock(center)} catch {}
+            if (topMostBlock && topMostBlock.location.y > center.y) return
+            const entity = data.dimension.spawnEntity("minecraft:lightning_bolt", {x: center.x, y: 100, z: center.z})
+            entity.teleport({x: center.x - 0.5, y: center.y + 0.5, z: center.z - 0.5})
+        } 
 })
 
 world.afterEvents.projectileHitEntity.subscribe((data) => {
     const { projectile } = data
-    system.runTimeout(() => {
     if (!projectile || !projectile.isValid()) return
     let itemData = projectile.getDynamicProperty("item") as string | undefined | TridentItem
     if (!itemData) return
     itemData = JSON.parse(itemData as string) as TridentItem
-    if (itemData.durabilityDamage === undefined) return
-    if (!TridentManager.reduceDurability(itemData)) return
-    itemData.durabilityDamage += 1
-    projectile.setDynamicProperty("item", JSON.stringify(itemData))
+    if (TridentManager.reduceDurability(itemData) && itemData.durabilityDamage !== undefined) {
+        itemData.durabilityDamage += 1
+        projectile.setDynamicProperty("item", JSON.stringify(itemData))
+    }
     if (!itemData.enchantments) return
+    const hitEntity = data.getEntityHit().entity
     const loyalty = itemData.enchantments.find((f) => f.id == "enchant.loyalty")
-    if (!loyalty) return
-    projectile.triggerEvent("custom_trident:returning")
-    }, waitTicks)
+    const channeling = itemData.enchantments.find((f) => f.id == "enchant.channeling")
+    if (loyalty) system.runTimeout(() => { if (projectile && projectile.isValid()) projectile.triggerEvent("custom_trident:returning") }, waitTicks)
+    if (channeling && data.dimension.id == MinecraftDimensionTypes.overworld && Weather.currentWeather == "Thunder" && hitEntity) {
+        let topMostBlock: Block | undefined
+        try { topMostBlock = hitEntity.dimension.getTopmostBlock(hitEntity.location) } catch { }
+        if (topMostBlock && topMostBlock.location.y > hitEntity.location.y) return
+        const entity = data.dimension.spawnEntity("minecraft:lightning_bolt", { x: hitEntity.location.x, y: 100, z: hitEntity.location.z })
+        entity.teleport(hitEntity.location)
+    }
 
 })
 
@@ -114,7 +119,7 @@ system.runInterval(() => {
             tridentEntity.remove()
         }
     }
-}, 15)
+}, 5)
 
 system.afterEvents.scriptEventReceive.subscribe((data) => {
     if (data.id != "custom_trident:trident_return" && data.id != "custom_trident:trident_tick") return

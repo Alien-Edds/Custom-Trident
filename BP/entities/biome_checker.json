@@ -1,0 +1,118 @@
+{
+    "format_version": "1.21.30",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "custom_trident:water_checker",
+            "is_experimental": false,
+            "is_spawnable": false,
+            "is_summonable": true,
+            "properties": {
+                "custom_trident:ran_event": {
+                    "client_sync": false,
+                    "default": false,
+                    "type": "bool"
+                }
+            }
+        },
+        "component_groups": {
+            "remove": {
+                "minecraft:instant_despawn": {}
+            }
+        },
+        "components": {
+            "minecraft:environment_sensor": {
+                "triggers": [
+                    {
+                        "event": "custom_trident:true",
+                        "target": "self",
+                        "filters": [
+                            {
+                                "all_of": [
+                                    {
+                                        "test": "bool_property",
+                                        "domain": "custom_trident:ran_event",
+                                        "value": false
+                                    },
+                                    {
+                                        "test": "in_water_or_rain",
+                                        "value": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "event": "custom_trident:false",
+                        "target": "self",
+                        "filters": [
+                            {
+                                "all_of": [
+                                    {
+                                        "test": "bool_property",
+                                        "domain": "custom_trident:ran_event",
+                                        "value": false
+                                    },
+                                    {
+                                        "test": "in_water_or_rain",
+                                        "value": false
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "minecraft:timer": {
+                "time": 1,
+                "looping": true,
+                "time_down_event": {
+                    "event": "custom_trident:remove",
+                    "target": "self"
+                }
+            },
+            "minecraft:custom_hit_test": {
+                "hitboxes": [
+                    {
+                        "width": 1,
+                        "height": 1,
+                        "pivot": [
+                            0,
+                            999999,
+                            0
+                        ]
+                    }
+                ]
+            },
+            "minecraft:health": {
+                "value": 1,
+                "max": 1,
+                "min": 1
+            }
+        },
+        "events": {
+            "custom_trident:true": {
+                "queue_command": {
+                    "command": "scriptevent custom_trident:in_water_or_rain true"
+                },
+                "set_property": {
+                    "custom_trident:ran_event": true
+                }
+            },
+            "custom_trident:false": {
+                "queue_command": {
+                    "command": "scriptevent custom_trident:in_water_or_rain false"
+                },
+                "set_property": {
+                    "custom_trident:ran_event": true
+                }
+            },
+            "custom_trident:remove": {
+                "add": {
+                    "component_groups": [
+                        "remove"
+                    ]
+                }
+            }
+        }
+    }
+}

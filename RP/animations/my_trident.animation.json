@@ -70,8 +70,9 @@
 			}
 		},
 		"animation.custom_trident.my_trident.wield_first_person_riptide": {
-			"loop": true,
+			"loop": false,
 			"override_previous_animation": true,
+			"animation_length": 1,
 			"bones": {
 				"pole": {
 					"position": [

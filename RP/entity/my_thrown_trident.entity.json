@@ -10,7 +10,7 @@
                 "default": "textures/custom_trident/entity/my_thrown_trident"
             },
             "materials": {
-                "default": "trident"
+                "default": "item_in_hand"
             },
             "render_controllers": [
                 "controller.render.custom_trident.my_thrown_trident"

@@ -7,15 +7,7 @@
 				"first_person": {
 					"animations": [
 						"wield_first_person",
-						{
-							"wield_first_person_raise": "query.main_hand_item_use_duration > 0.0f"
-						},
-						{
-							"wield_first_person_raise_shake": "query.main_hand_item_use_duration > 0.0f"
-						},
-						{
-							"wield_first_person_riptide": "query.can_damage_nearby_mobs > 0.0"
-						}
+						"controller_wield_first_person"
 					],
 					"transitions": [
 						{
@@ -33,6 +25,42 @@
 					"transitions": [
 						{
 							"first_person": "c.is_first_person"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.custom_trident.my_trident.first_person_wield": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+				"transitions": [
+					{
+						"using": "query.main_hand_item_use_duration > 0.0f"
+					}
+				]
+				},
+				"using": {
+					"animations": [
+						"wield_first_person_raise",
+						"wield_first_person_raise_shake"
+					],
+					"transitions": [
+						{
+							"default": "query.main_hand_item_use_duration <= 0.0f && !q.is_in_water_or_rain"
+						},
+						{
+							"riptide": "query.main_hand_item_use_duration <= 0.0f && q.is_in_water_or_rain"
+						}
+					]
+				},
+				"riptide": {
+					"animations": [
+						"wield_first_person_riptide"
+					],
+					"transitions": [
+						{
+							"default": "q.all_animations_finished"
 						}
 					]
 				}

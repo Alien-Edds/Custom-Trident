@@ -7,6 +7,12 @@ export enum RiptideEnvironment{
 }
 
 export interface Riptide{
+    /**
+     * WARNING: If false, cancels the projectile check in favor of riptide checks.
+     * Information: If it doesn't have the riptide enchant on it, then it will act like it's level 1 riptide.
+     * Default: true
+     */
+    needsEnchant?: boolean
     environment: RiptideEnvironment
     velocity: number,
     sound?: {
