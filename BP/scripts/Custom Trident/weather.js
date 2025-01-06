@@ -9,7 +9,6 @@ export class Weather {
         else
             this.currentWeather = currentWeather;
         world.afterEvents.weatherChange.subscribe((data) => {
-            world.sendMessage(`weather changed to ${data.newWeather}`);
             world.setDynamicProperty("weather", data.newWeather);
             this.currentWeather = data.newWeather;
         });
