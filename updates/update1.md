@@ -8,3 +8,4 @@
 ### Known issues
 - Riptide animation doesn't play in third person.
 - First person animation plays no matter if you have riptide or not.
+- First person animation plays for inWater stuff no matter if the environment type is set to something different.
