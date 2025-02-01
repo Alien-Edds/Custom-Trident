@@ -1,4 +1,4 @@
-# Update: Channeling & Riptide Rain
+# Update: Enchant Glint & Riptide Rain
 
 ### Added
 - Enchantment glint thanks to the Enchanted Entity Glint dev resource: https://discord.com/channels/523663022053392405/1075613258259644416
