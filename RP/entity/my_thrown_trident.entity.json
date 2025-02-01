@@ -7,13 +7,16 @@
                 "default": "geometry.custom_trident.my_thrown_trident"
             },
             "textures": {
-                "default": "textures/custom_trident/entity/my_thrown_trident"
+                "default": "textures/custom_trident/entity/my_thrown_trident",
+                "enchanted": "textures/custom_trident/misc/enchanted_entity_glint"
             },
             "materials": {
-                "default": "item_in_hand"
+                "default": "item_in_hand",
+                "enchanted": "custom_trident.entity_enchant"
             },
             "render_controllers": [
-                "controller.render.custom_trident.my_thrown_trident"
+                "controller.render.custom_trident.my_thrown_trident",
+                {"controller.render.custom_trident.entity_enchanted": "q.property('custom_trident:enchanted')"}
             ],
             "animations": {
                 "rotate": "animation.custom_trident.my_trident.rotate"

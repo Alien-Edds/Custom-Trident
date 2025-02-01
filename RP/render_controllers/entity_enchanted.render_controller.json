@@ -1,0 +1,38 @@
+{
+    /*
+        I DID NOT MAKE THIS FILE, IT IS FROM THIS TEMPLATE HERE: https://discord.com/channels/523663022053392405/1075613258259644416
+    */
+    "format_version": "1.10.0",
+    "render_controllers": {
+        "controller.render.custom_trident.entity_enchanted": {
+            "geometry": "Geometry.default", //If your entity uses a custom model, replace this string accordingly
+            "part_visibility": [
+                { "*": true }
+            ],
+            "materials": [
+                { "*": "Material.enchanted" }
+            ],
+            "textures": [
+                "Texture.enchanted"
+            ],
+            "color": {
+                "r": 0.5,
+                "g": 0.0,
+                "b": 1.0,
+                "a": 1.0 //The material I made doesn't support alpha value, don't bother changing it. Use 'light_color_multiplier' instead.
+            },
+            "uv_anim": {
+                "offset": [
+                    "(Math.floor(query.life_time * 20.0) + query.frame_alpha) * -0.02", //Coefficient at the end affects speed (even 0.1 is surpisingly fast so be careful). Negative values will make the woosh effect travel to the left, positive travels to the right, zero results in no horizontal movement.
+                    "(Math.floor(query.life_time * 20.0) + query.frame_alpha) * 0.03" //Similar case, positive values make the woosh effect travel up, negative goes down, zero gives no vertical movement.
+                ],
+                "scale": [
+                    1.0,
+                    1.0
+                ]
+            },
+            "light_color_multiplier": 0.2, //This number is essentially just the alpha value, or "opacity."
+            "ignore_lighting": false //I would leave this the way it is, 'true' looks really bad. But you can use another variable here if you really want.
+        }
+    }
+}

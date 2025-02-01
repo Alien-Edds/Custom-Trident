@@ -1,0 +1,21 @@
+{
+    /*
+        I DID NOT MAKE THIS FILE, IT IS FROM THIS TEMPLATE HERE: https://discord.com/channels/523663022053392405/1075613258259644416
+    */
+  "materials": {
+    "version": "1.0.0",
+    "custom_trident.entity_enchant:entity_static": {
+      "+defines": [ "USE_UV_ANIM", "USE_EMISSIVE", "USE_COLOR_MASK" ],
+      "+states": [ "Blending", "DisableCulling" ],
+      "blendSrc": "One",
+      "blendDst": "One",
+      "depthFunc": "Equal",
+      "+samplerStates": [
+        {
+          "samplerIndex": 0,
+          "textureWrap": "Repeat"
+        }
+      ]
+    }
+  }
+}

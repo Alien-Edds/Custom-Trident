@@ -146,7 +146,7 @@ system.runInterval(() => {
             tridentEntity.remove();
         }
     }
-}, 5);
+}, 3);
 system.afterEvents.scriptEventReceive.subscribe((data) => {
     if (data.id != "custom_trident:trident_return" && data.id != "custom_trident:trident_tick")
         return;

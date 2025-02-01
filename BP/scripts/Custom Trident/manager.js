@@ -1,5 +1,10 @@
 import { EnchantmentType, EntityEquippableComponent, EntityOnFireComponent, EquipmentSlot, ItemDurabilityComponent, ItemEnchantableComponent, ItemStack, system, world } from "@minecraft/server";
 import { RiptideEnvironment } from "./interfaces";
+import { CustomTridents } from "./data";
+const excludedTypes = ["minecraft:arrow", "minecraft:snowball", "minecraft:thrown_trident", "minecraft:xp_orb", "minecraft:experience_bottle", "minecraft:splash_potion", "minecraft:lingering_potion", "minecraft:fireworks_rocket", "minecraft:armor_stand", "custom_trident:water_checker"];
+for (const trident of CustomTridents)
+    if (trident.projectile)
+        excludedTypes.push(trident.projectile.entityID);
 export class TridentManager {
     static getEquipmentSlot(player, EquipmentSlot) {
         return player.getComponent(EntityEquippableComponent.componentId).getEquipmentSlot(EquipmentSlot);
@@ -143,6 +148,44 @@ export class TridentManager {
             }
             if (riptide.onRiptide)
                 riptide.onRiptide(source, riptideLevel);
+            if (riptide.damage === undefined)
+                return;
+            let tick = 0;
+            const interval = system.runInterval(() => {
+                if (!source || !source.isValid() || tick > 20) {
+                    system.clearRun(interval);
+                    world.sendMessage("stopped riptide damage");
+                    return;
+                }
+                const velocity = source.getVelocity();
+                tick++;
+                const entities = source.dimension.getEntities({ location: source.location, maxDistance: 2, excludeTypes: excludedTypes, closest: 5 });
+                for (let i = 0; i < entities.length; i++) {
+                    if (entities[i].id === source.id)
+                        entities.splice(i, 1);
+                }
+                if (!entities[0])
+                    return;
+                const entityLoc = entities[0].location;
+                const loc = source.location;
+                const total = Math.abs(loc.x - entityLoc.x) + Math.abs(loc.y - entityLoc.y) + Math.abs(loc.z - entityLoc.z);
+                const direction = { x: (loc.x - entityLoc.x) / total, y: (loc.y - entityLoc.y) / total, z: (loc.z - entityLoc.z) / total };
+                const multi = this.getKnockbackMultiplier(source);
+                source.applyKnockback(direction.x, direction.z, 1 * multi, direction.y * multi);
+                if (riptide.damage)
+                    if (velocity.y <= 0) {
+                        try {
+                            entities[0].dimension.spawnParticle("minecraft:critical_hit_emitter", { x: entityLoc.x, y: entityLoc.y + 2, z: entityLoc.z });
+                        }
+                        catch { }
+                        entities[0].applyDamage(riptide.damage * 2);
+                    }
+                    else
+                        entities[0].applyDamage(riptide.damage);
+                system.clearRun(interval);
+                world.sendMessage("hit riptide damage");
+                return;
+            });
             return;
         }
     }

@@ -15,6 +15,10 @@ export interface Riptide{
     needsEnchant?: boolean
     environment: RiptideEnvironment
     velocity: number,
+    /**
+     * Adding damage will also give the entity collision when riptiding.
+     */
+    damage?: number,
     sound?: {
         /**
          * @param ids In order from level 1 to 3

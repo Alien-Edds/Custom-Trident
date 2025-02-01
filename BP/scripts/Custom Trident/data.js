@@ -26,6 +26,7 @@ export const CustomTridents = [
             needsEnchant: true,
             environment: RiptideEnvironment.Water,
             velocity: 2.04,
+            damage: 8,
             onRiptide: (player, level) => {
                 world.sendMessage(`${player.name} is riptiding with a level of ${level}`);
             },
