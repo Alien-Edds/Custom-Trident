@@ -1,0 +1,55 @@
+{
+	"$schema": "https://raw.githubusercontent.com/Bedrock-OSS/regolith-schemas/main/config/v1.7.json",
+	"author": "Alien Edds",
+	"name": "Custom Trident",
+	"packs": {
+		"behaviorPack": "./packs/BP",
+		"resourcePack": "./packs/RP"
+	},
+	"regolith": {
+		"dataPath": "./packs/data",
+		"filterDefinitions": {
+			"rolldown": {
+				"url": "github.com/lightyisreal/regolith-filters",
+				"version": "2d6c5aa143d2b4ba26b474a8ac8b2b7ea110f22f"
+			}
+		},
+		"formatVersion": "1.7.0",
+		"profiles": {
+			"default": {
+				"export": {
+					"build": "standard",
+					"readOnly": false,
+					"target": "development"
+				},
+				"filters": [
+					{
+						"filter": "rolldown",
+						"settings": {
+							"output": {
+								"preserveModules": true
+							}
+						}
+					}
+				]
+			},
+			"build": {
+				"export": {
+					"build": "standard",
+					"readOnly": false,
+					"target": "local"
+				},
+				"filters": [
+					{
+						"filter": "rolldown",
+						"settings": {
+							"output": {
+								"preserveModules": true
+							}
+						}
+					}
+				]
+			}
+		}
+	}
+}
